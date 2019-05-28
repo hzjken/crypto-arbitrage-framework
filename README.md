@@ -1,5 +1,6 @@
 # Crypto Arbitrage Framework
 A cryptocurrency arbitrage framework implemented with **`ccxt`** and **`cplex`**. It can be used to monitor multiple exchanges, find a multi-lateral arbitrage path which maximizes rate of return, calculate the optimal trading amount for each pair in the path given flexible constraints, and execute trades with multi-threading implemenation.
+<p align="center"><img width="800" src="https://user-images.githubusercontent.com/30411828/58489243-725c2200-819d-11e9-8a17-ae8aa6d35ec2.PNG"></p>
 
 ## Why This Framework?
 There are quite a few cryptocurrency arbitrage bots open-sourced out there as well, but here are some features that could potentially distinguish this framework from the others.
@@ -151,7 +152,10 @@ Check [`main.py`](https://github.com/hzjken/crypto-arbitrage-framework/blob/mast
 1. This project is done on my personal interest, without rigorous test on the code, so check the code first and use it **at your own risk**.
 2. I did successfully find arbitrage opportunities with this framework recently (when the bitfinex btc is 300$ higher than other exchanges), but you should check the **validity of the arbitrage opportunity** on your own (whether an exchange is scam? whether a coin can be withdrawed or deposited? etc.).
 3. There are cases when some minor coins' orderbook information is out of date when fetched from ccxt, maybe because the trading of the minor pair is paused for a while, which leads to a fake opportunity. You should verify this as well.
-4. I myself think this project idea and the solution quite cool and valuable, but it will require some more time to verify the validity of arbitrage opportunities and resource (money) to really utilize it, both of which I don't have currently... So I decided to share it here to people who can utilize it! If you think it's good or successfully earn money with this framework, feel free to donate me some money through the following wallet addresses. **:p**
+4. I myself think this project idea and the solution quite cool and valuable, but it will require some more time to verify the validity of arbitrage opportunities and resource (money) to really utilize it, both of which I don't have currently... So I decided to share it here to people who can utilize it!
+5. Currently it's not perfect yet, but I might continue to improve this project if I have time in the future. I welcome any questions or comments if you want to tell me!
+
+If you think it's good or successfully earn money with this framework, feel free to donate me some money through the following wallet addresses. **:p**
 
 **BTC: 1DQvcRAST4VgPMYKKs9HFJLQVT3i3h8XCg**<br>
 **ETH: 0x04f6874c50b5b4a31e663b8840d233c666aec0c9**
