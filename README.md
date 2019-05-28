@@ -90,3 +90,18 @@ if path_optimizer.have_opportunity():
 
 The **`AmtOptimizer`** calculates optimal trading amount with consideration of **available balances**, **orderbook prices and volumes**, **minimum trading limit** and **trading amount digit precision** etc (details can be checked in the function **`_set_constraints()`** in [`amount_optimizer.py`](https://github.com/hzjken/crypto-arbitrage-framework/blob/master/crypto/amount_optimizer.py)), which is able to satisfy a real trading environment. It also accelerates the optimal amount calculation process greatly with the help of **cplex linear programming** in comparison to brute-force enumeration, and allows scalable extension to longer path length and larger orderbook. 
 
+### TradeExecutor
+```python
+from crypto.trade_execution import TradeExecutor
+
+# initiation
+trade_executor = TradeExecutor(path_optimizer)
+
+# usage
+if amt_optimizer.have_workable_solution():
+    solution = amt_optimizer.trade_solution
+    trade_executor.execute(solution)
+```
+**`TradeExecutor`** executes the trading solution given from **`AmtOptimizer`** with multi-threading implementation to parallelize the order submission of different exchanges to accelerate the process and increase success rate. In the mechanism of **`TradeExecutor`**, if an order is submitted but doesn't get executed within 30 seconds, this and all the later orders will be cancelled so as to stop loss from the market turbulance, while the executed orders are kept remained.
+
+The **`TradeExecutor`** can only work if a workable solution can be provided from the **`AmtOptimizer`** (In many cases, you can find a feasible path but no workable solution can be found due to **digit precision** or **amount limit** constraints). Therefore, we need to check if there's workable solution with **`amt_optimizer.have_workable_solution()`** before we use **`trade_executor.execute(solution)`** to execute.
