@@ -1,5 +1,5 @@
 # Crypto Arbitrage Framework
-A cryptocurrency arbitrage framework implemented with ccxt and cplex. It can be used to monitor multiple exchanges, find a multi-lateral arbitrage path which maximizes rate of return, calculate the optimal trading amount for each pair in the path given flexible constraints, execute trades, and execute trades according to the calculated amount with multi-threading techniques.
+A cryptocurrency arbitrage framework implemented with ccxt and cplex. It can be used to monitor multiple exchanges, find a multi-lateral arbitrage path which maximizes rate of return, calculate the optimal trading amount for each pair in the path given flexible constraints, and execute trades with multi-threading implemenation.
 
 ## Why This Framework?
 There are quite a few cryptocurrency arbitrage bots open-sourced out there as well, but here are some features that could potentially distinguish this framework from the others.
