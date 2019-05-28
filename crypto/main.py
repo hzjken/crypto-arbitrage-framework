@@ -47,5 +47,5 @@ if __name__ == '__main__':
             if amt_optimizer.have_workable_solution():
                 solution = amt_optimizer.trade_solution
                 trade_executor.execute(solution)
-        # rest for 20 seconds as some of the apis do not allow to frequent requests
+        # rest for 20 seconds as some of the apis do not allow too frequent requests
         time.sleep(20)
