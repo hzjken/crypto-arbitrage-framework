@@ -105,3 +105,37 @@ if amt_optimizer.have_workable_solution():
 **`TradeExecutor`** executes the trading solution given from **`AmtOptimizer`** with multi-threading implementation to parallelize the order submission of different exchanges to accelerate the process and increase success rate. In the mechanism of **`TradeExecutor`**, if an order is submitted but doesn't get executed within 30 seconds, this and all the later orders will be cancelled so as to stop loss from the market turbulance, while the executed orders are kept remained.
 
 The **`TradeExecutor`** can only work if a workable solution can be provided from the **`AmtOptimizer`** (In many cases, you can find a feasible path but no workable solution can be found due to **digit precision** or **amount limit** constraints). Therefore, we need to check if there's workable solution with **`amt_optimizer.have_workable_solution()`** before we use **`trade_executor.execute(solution)`** to execute.
+
+## Before Usage
+There are some preparation works you need to do before you can use this arbitrage framework.
+1. **`pip install ccxt`**, ccxt is a great open-source library that provides api to more than 100 crypto exchanges.
+2. **`pip install docplex`**, docplex is the python api for using cplex solver.
+3. install and setup cplex studio (I use the academic version, because community version has limitation on model size)
+4. add all the exchanges (supported by ccxt) you want to monitor and do arbitrage on in [`exchanges.py`](https://github.com/hzjken/crypto-arbitrage-framework/blob/master/crypto/exchanges.py) with the same format. If you only want to check whether there's arbitrage opporunity, you don't need to specify keys. But if you want to execute trades with this framework, add keys like this.
+```python
+exchanges = {
+    'binance': ccxt.binance({
+        'apiKey': 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
+        'secret': 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
+    }),
+    'bittrex': ccxt.bittrex({
+        'apiKey': 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
+        'secret': 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
+    }),
+}
+```
+5. check the trading commission rates for the exchanges you specify and put them in the variable `trading_fee` in [`info.py`](https://github.com/hzjken/crypto-arbitrage-framework/blob/master/crypto/info.py)
+6.  get an api key from coinmarketcap in order to fetch cryptocurrencies usd prices, and add it to function `get_crypto_prices` in [`utils.py`](https://github.com/hzjken/crypto-arbitrage-framework/blob/master/crypto/utils.py)
+```python
+'X-CMC_PRO_API_KEY': 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
+```
+
+## Usage Example
+Check [`main.py`](https://github.com/hzjken/crypto-arbitrage-framework/blob/master/crypto/main.py)
+
+## Something Else To Know
+1. This project is done on my personal interest, without rigorous test on the code, so use it on your own risk.
+2. I did successfully find arbitrage opportunities with this framework recently (when the bitfinex btc is 300$ higher than other exchanges), but you should check the validity of the arbitrage opportunity on your own (whether an exchange is scam? whether a coin can be withdrawed or deposited? etc.).
+3. There are cases when some minor coins' orderbook information is out of date when fetched from ccxt, maybe because the trading of the minor pair is paused for a period of time, which leads to 'arbitrage opportunity'. You should verify this as well.
+4. I myself think this project idea and the solution quite cool, if you think so or successfully earn money with this framework,
+
