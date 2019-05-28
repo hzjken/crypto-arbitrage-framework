@@ -71,3 +71,22 @@ simulated_bal = {
 }
 ```
 The simulated balance in each exchange, format is like above (the amount for each coin is the number of coins, not in terms of USD value). If it's given, the optimizer will calculate optimal path given your simulated balance, if not, it will fetch your real balances on all the exchanges you specify and calulate path based on real balances. (only if you provide api keys in [`exhcanges.py`](https://github.com/hzjken/crypto-arbitrage-framework/blob/master/crypto/exchanges.py)). Default is set to be None.
+
+### AmtOptimizer
+```python
+from crypto.amount_optimizer import AmtOptimizer
+
+# initiation
+amt_optimizer = AmtOptimizer(
+    PathOptimizer=path_optimizer, 
+    orderbook_n=100
+)
+
+# usage
+if path_optimizer.have_opportunity():
+    amt_optimizer.get_solution()
+```
+**`AmtOptimizer`** calculates the optimal trading amount for each trading pair in the arbitrage path. It can only work when a feasible arbitrage path is found. Therefore, we need to use **`path_optimizer.have_opportunity()`** to check whether a path is found before using the **`amt_optimizer.get_solution()`** function. It takes in two required parameters, the **`PathOptimizer`** and **`orderbook_n`**. **`PathOptimizer`** is the class initiated from last step and **`orderbook_n`** specifies the number of existing orders that the optimization will find solution from.
+
+The **`AmtOptimizer`** calculates optimal trading amount with consideration of **available balances**, **orderbook prices and volumes**, **minimum trading limit** and **trading amount digit precision** etc, which is able to satisfy a real trading environment. It also accelerates the optimal amount calculation process greatly with the help of **cplex linear programming** in comparison to brute-force enumeration, and allows scalable extension to longer path length and larger orderbook. 
+
