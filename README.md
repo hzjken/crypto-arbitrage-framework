@@ -14,6 +14,16 @@ from crypto.exchanges import exchanges
 path_optimizer = PathOptimizer(exchanges=exchanges)
 path_optimizer.init_currency_info()
 
+# initiation with extra params
+path_optimizer = PathOptimizer(
+    exchanges=exchanges,
+    path_length=10,
+    simulated_bal=simulated_bal,
+    interex_trading_size=2000,
+    min_trading_limit=100
+)
+path_optimizer.init_currency_info()
+
 #usage
 path_optimizer.find_arbitrage()
 ```
@@ -60,4 +70,4 @@ simulated_bal = {
     'bittrex': {'BTC': 10, 'ETH': 200, 'NEO': 1000, 'XRP': 30000, 'XLM': 80000},
 }
 ```
-The simulated balance in each exchange, format is like above. If it's given, the optimizer will calculate optimal path given your simulated balance, if not, it will fetch your real balances on all the exchanges you specify and calulate path based on real balances. (only if you provide api keys in [`exhcanges.py`](https://github.com/hzjken/crypto-arbitrage-framework/blob/master/crypto/exchanges.py)). Default is set to be None.
+The simulated balance in each exchange, format is like above (the amount for each coin is the number of coins, not in terms of USD value). If it's given, the optimizer will calculate optimal path given your simulated balance, if not, it will fetch your real balances on all the exchanges you specify and calulate path based on real balances. (only if you provide api keys in [`exhcanges.py`](https://github.com/hzjken/crypto-arbitrage-framework/blob/master/crypto/exchanges.py)). Default is set to be None.
