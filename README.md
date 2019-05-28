@@ -11,10 +11,9 @@ Most of the brute-force solutions can only check arbitrage path of length 3 (onl
 #### 3. Trading Amount Optimization
 Some arbitrage bots tell you there is an profitable arbitrage path, but do not tell you how much you should buy or sell in each trading pair in the path. It's **meaningless**! This framework utilizes a **two-step optimization** to tell you what's the **optimal path** and what's the **optimal amount** to sell or trade in the path. The trading amount optimization also considers a bunch of **practical constraints** (trading limit, digit precision, orderbook price level and volume etc.) that traders will meet in real trading environment. It gives a correct solution in a fast and clear way.
 #### 4. Multi-threading Order Submission
-5. Scalability
-
-
-
+In the part of order execution, the framework utilizes **multi-threading** to parallelize order submission of different exchanges when cross-exchange arbitrage is set to be allowed. It helps to accelerate the order execution process and increase success rate. The framework also has a mechanism that if the time an order waits to be executed exceed a threshold, the order and following orders will be cancelled to **stop loss** from market turbulance.
+#### 5. Scalability
+Integrated with **`ccxt`**, it's pretty easy for users to scale up their arbitrage scope to multiple exchanges by adding new exchanges to the [`exchanges.py`](https://github.com/hzjken/crypto-arbitrage-framework/blob/master/crypto/exchanges.py). With such, users can explore a **larger trading network** and **more arbitrage opportunities** but not limited to one or two exchanges only. 
 
 ## Components
 The framework contains 3 main components, **`PathOptimizer`**, **`AmtOptimizer`** and **`TradeExecutor`**. **`PathOptimizer`** and **`AmtOptimizer`** runs a two-step optimization to find out a feasible and workable solution (optimal path and optimal trading amount). 
