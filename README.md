@@ -1,5 +1,20 @@
-# crypto-arbitrage-framework
+# Crypto Arbitrage Framework
 A cryptocurrency arbitrage framework implemented with ccxt and cplex. It can be used to monitor multiple exchanges, find a multi-lateral arbitrage path which maximizes rate of return, calculate the optimal trading amount for each pair in the path given flexible constraints, execute trades, and execute trades according to the calculated amount with multi-threading techniques.
+
+## Why This Framework?
+There are quite a few cryptocurrency arbitrage bots open-sourced out there as well, but here are some features that could potentially distinguish this framework from the others.
+
+#### 1. Speed
+A majority of the arbitrage bots monitor the market with **brute-force** solution to calculate the rates of return for all the possible trading path, which requires much computing power and time. This framework leverages **linear programming** solution with **cplex solver** to find out the arbitrage path with the max rate of return, which is much faster. In the future, I might continue to develop the framework to support top n arbitrage paths.   
+#### 2. Flexibility
+Most of the brute-force solutions can only check arbitrage path of length 3 (only contains 3 crypto-currencies, known as **triangular arbitrage** in forex market). With this framework, things become much more **flexible**. It allows the optimizer to give an arbitrage path with no length limit (**multi-lateral arbitrage**). But of course, you can limit the path length or set any other constraints very easily in the **linear programming** optimizer to meet your preference.
+#### 3. Trading Amount Optimization
+Some arbitrage bots tell you there is an profitable arbitrage path, but do not tell you how much you should buy or sell in each trading pair in the path. It's **meaningless**! This framework utilizes a **two-step optimization** to tell you what's the **optimal path** and what's the **optimal amount** to sell or trade in the path. The trading amount optimization also considers a bunch of **practical constraints** (trading limit, digit precision, orderbook price level and volume etc.) that traders will meet in real trading environment. It gives a correct solution in a fast and clear way.
+#### 4. Multi-threading Order Submission
+5. Scalability
+
+
+
 
 ## Components
 The framework contains 3 main components, **`PathOptimizer`**, **`AmtOptimizer`** and **`TradeExecutor`**. **`PathOptimizer`** and **`AmtOptimizer`** runs a two-step optimization to find out a feasible and workable solution (optimal path and optimal trading amount). 
@@ -134,8 +149,10 @@ exchanges = {
 Check [`main.py`](https://github.com/hzjken/crypto-arbitrage-framework/blob/master/crypto/main.py)
 
 ## Something Else To Know
-1. This project is done on my personal interest, without rigorous test on the code, so use it on your own risk.
-2. I did successfully find arbitrage opportunities with this framework recently (when the bitfinex btc is 300$ higher than other exchanges), but you should check the validity of the arbitrage opportunity on your own (whether an exchange is scam? whether a coin can be withdrawed or deposited? etc.).
-3. There are cases when some minor coins' orderbook information is out of date when fetched from ccxt, maybe because the trading of the minor pair is paused for a period of time, which leads to 'arbitrage opportunity'. You should verify this as well.
-4. I myself think this project idea and the solution quite cool, if you think so or successfully earn money with this framework,
+1. This project is done on my personal interest, without rigorous test on the code, so check the code first and use it **at your own risk**.
+2. I did successfully find arbitrage opportunities with this framework recently (when the bitfinex btc is 300$ higher than other exchanges), but you should check the **validity of the arbitrage opportunity** on your own (whether an exchange is scam? whether a coin can be withdrawed or deposited? etc.).
+3. There are cases when some minor coins' orderbook information is out of date when fetched from ccxt, maybe because the trading of the minor pair is paused for a while, which leads to a fake opportunity. You should verify this as well.
+4. I myself think this project idea and the solution quite cool and valuable, but it will require some more time to verify the validity of arbitrage opportunities and resource (money) to really utilize it, both of which I don't have currently... So I decided to share it here to people who can utilize it! If you think it's good or successfully earn money with this framework, feel free to donate me some money through the following wallet addresses. **:p**
 
+**BTC: 1DQvcRAST4VgPMYKKs9HFJLQVT3i3h8XCg**<br>
+**ETH: 0x04f6874c50b5b4a31e663b8840d233c666aec0c9**
