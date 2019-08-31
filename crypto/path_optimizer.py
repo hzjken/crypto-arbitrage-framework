@@ -297,7 +297,8 @@ class PathOptimizer(Model):
 
         for key, val in self.price.items():
             base_coin = key.split('/')[0].split('_')[-1]
-            if base_coin in self.crypto_prices:
+            if base_coin in self.crypto_prices and val['baseVolume'] is not None \
+                    and self.crypto_prices[base_coin]['price'] is not None:
                 usd_values[key] = val['baseVolume'] * self.crypto_prices[base_coin]['price'] * percentile
 
         for key, val in usd_values.items():
