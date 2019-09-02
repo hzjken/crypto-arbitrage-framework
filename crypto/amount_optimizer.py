@@ -32,6 +32,8 @@ class AmtOptimizer(Model):
     profit_unit = None  # str, the unit of the arbitrage final profit
     trade_amt_ptc = None  # float, to determine the feasible trading percentage in terms of given orderbook volume
     print_content = None  # content to be printed when get_solution() is run
+    amplifier = None  # a very small float, usually 1e-10 or something, used to amplify the objective function in LP so that the LP gets solved
+    default_precision = None  # default precision level when precision is not available
 
     def __init__(self, PathOptimizer, orderbook_n):
         super().__init__()
@@ -39,8 +41,10 @@ class AmtOptimizer(Model):
         self.get_pair_info()
         self.get_precision()
         self.orderbook_n = orderbook_n
-        self.big_m = 1000000
-        self.trade_amt_ptc = 0.5
+        self.big_m = 1e+10
+        self.trade_amt_ptc = 1
+        self.amplifier = 1e-10
+        self.default_precision = 3
 
     def get_solution(self):
         '''the function to be used by user to get trading solution'''
@@ -76,30 +80,32 @@ class AmtOptimizer(Model):
 
     def _set_constraints(self):
         '''function to set linear constraints for the optimization model'''
-        # 1. you can only choose one price level from each step's order book
+
+        # 1. total number of triggered price y should be equal to path length
+        self.add_constraint(self.sum(self.y) == self.path_n)
+        # 2. you can only choose one price level from each step's order book
         self.add_constraints(self.sum(self.y[i, :]) <= 1 for i in range(self.path_n))
         # only the amount at the chosen price level could be larger than 0
         self.add_constraints(
-            self.z[i, j] <= self.big_m * self.y[i, j] for i in range(self.path_n) for j in range(self.orderbook_n))
-        # 2. amount for order book should be smaller than given order amount
+            self.x[i, j] <= self.big_m * self.y[i, j] for i in range(self.path_n) for j in range(self.orderbook_n))
+        # 3. amount for order should be smaller than given order book amount
         self.add_constraints(
             self.z[i, j] <= self.trade_amt_ptc * self.amt_matrix[i, j] for i in range(self.path_n) for j in
             range(self.orderbook_n))
-        # 3. first path trading amount smaller than balance of first coin
+        # 4. first transfer trading amount smaller than balance of first coin
         first_coin_bal = self.balance_vol[self.path[0]][self.path[0][0]]
         if not self.reverse_list[0]:
             self.add_constraint(self.sum(self.z[0, :]) <= first_coin_bal)
         else:
-            self.add_constraints(
-                self.z[0, j] * self.price_matrix[0, j] <= first_coin_bal for j in range(self.orderbook_n))
-        # 4. inter exchange transfer amount should be smaller than recipient balance
+            self.add_constraint(self.dot(self.z[0, :], self.price_matrix[0, :]) <= first_coin_bal)
+        # 5. inter exchange transfer amount should be smaller than recipient balance
         for i, trade in enumerate(self.path):
             if trade in self.balance_vol:
                 sec_balance = self.balance_vol[trade].get(trade[1])
                 withdraw_fee = self.PathOptimizer.withdrawal_fee[trade[0]]['coin_fee']
                 if sec_balance is not None:
                     self.add_constraint(self.sum(self.z[i, :]) <= sec_balance + withdraw_fee)
-        # 5. later step amount should be bound by prior step amount and price
+        # 6. later step amount should be bound by prior step amount and price
         for i, trade in enumerate(self.path):
             reverse = self.reverse_list[i]
             inter = trade[0].split('_')[0] != trade[1].split('_')[0]
@@ -108,26 +114,16 @@ class AmtOptimizer(Model):
                 if not reverse:
                     self.add_constraint(self.sum(self.z[i, :]) <= prev_amt)
                 else:
-                    self.add_constraints(
-                        self.z[i, j] * self.price_matrix[i, j] <= prev_amt for j in range(self.orderbook_n))
+                    self.add_constraint(self.dot(self.z[i, :], self.price_matrix[i, :]) <= prev_amt)
 
             if inter:
                 withdraw_fee = self.PathOptimizer.withdrawal_fee[trade[0]]['coin_fee']
-                prev_amt = self.sum(self.z[i, :]) - withdraw_fee * self.sum(self.y[i, :])
+                prev_amt = self.sum(self.z[i, :]) - withdraw_fee
             else:
                 if not reverse:
-                    prev_amt = self.sum(self.z[i, :] * self.price_matrix[i, :]) * (1 - self.path_commission[i])
+                    prev_amt = self.dot(self.z[i, :], self.price_matrix[i, :]) * (1 - self.path_commission[i])
                 else:
                     prev_amt = self.sum(self.z[i, :]) * (1 - self.path_commission[i])
-        # 6. initial trading amount should be larger than the minimum trading limit
-        start_reverse = self.reverse_list[0]
-        if not start_reverse:
-            pay = self.sum(self.z[0, :])
-        else:
-            pay = self.sum(self.z[0, :] * self.price_matrix[0, :])
-        _, base_coin = self.path[0][0].split('_')
-        usd_val = pay * self.PathOptimizer.crypto_prices[base_coin]['price']
-        self.add_constraint(usd_val >= self.PathOptimizer.min_trading_limit * self.sum(self.y[0, :]))
         # 7. integer variables should all be larger than 0
         self.add_constraints(self.x[i, j] >= 0 for i in range(self.path_n) for j in range(self.orderbook_n))
 
@@ -144,19 +140,19 @@ class AmtOptimizer(Model):
             get = self.sum(self.z[-1, :]) - withdraw_fee
         else:
             if not end_reverse:
-                get = self.sum(self.z[-1, :] * self.price_matrix[-1, :]) * (1 - self.path_commission[-1])
+                get = self.dot(self.z[-1, :], self.price_matrix[-1, :]) * (1 - self.path_commission[-1])
             else:
                 get = self.sum(self.z[-1, :]) * (1 - self.path_commission[-1])
 
         if not start_reverse:
             pay = self.sum(self.z[0, :])
         else:
-            pay = self.sum(self.z[0, :] * self.price_matrix[0, :])
+            pay = self.dot(self.z[0, :], self.price_matrix[0, :])
 
-        self.maximize(get - pay)
+        self.maximize((get - pay) / self.amplifier)
 
     def _get_solution(self):
-        '''function to solve the optimzation model, save result and print outputs'''
+        '''function to solve the optimization model, save result and print outputs'''
         self.print_content = ''
         self.trade_solution = OrderedDict()
         ms = self.solve()
@@ -167,7 +163,7 @@ class AmtOptimizer(Model):
 
         for i, j in nonzeroZ:
             reverse = self.reverse_list[i]
-            precision = -int(np.log10(self.precision_matrix[i]))
+            precision = -int(np.log10(self.precision_matrix[i, 0]))
             trade_vol = round(zs[i, j], precision)
             price = self.price_matrix[i, j]
             trade = self.path[i] if not reverse else self.path[i][::-1]
@@ -178,8 +174,11 @@ class AmtOptimizer(Model):
             self.print_content = 'no workable solution'
         else:
             self.profit_unit = self.path[0][0]
-            self.print_content = 'Solution: {}, final profit: {} {}'.format(self.trade_solution, self.objective_value,
-                                                                            self.profit_unit)
+            self.print_content = 'Solution: {}, final profit: {} {}'.format(
+                self.trade_solution,
+                self.objective_value * self.amplifier,
+                self.profit_unit
+            )
         print(self.print_content)
 
     def get_pair_info(self):
@@ -202,7 +201,10 @@ class AmtOptimizer(Model):
         for exc_name, exchange in self.PathOptimizer.exchanges.items():
             for pair, info in exchange.markets.items():
                 new_name = '/'.join(['{}_{}'.format(exc_name, i) for i in pair.split('/')])
-                self.precision[new_name] = info['precision']['amount']
+                precision = info['precision'].get('amount')
+                if precision is None:
+                    precision = self.default_precision
+                self.precision[new_name] = precision
 
         # withdrawal precision (inter exchange trading)
         if self.PathOptimizer.inter_exchange_trading:
@@ -330,7 +332,9 @@ class AmtOptimizer(Model):
                     self.order_book[i]['orders'] = orders[:self.orderbook_n, :]
             else:
                 self.order_book[i]['reverse'] = reverse
-                self.order_book[i]['orders'] = np.tile(np.array([[1, np.nan_to_num(np.inf)]]), (self.orderbook_n, 1))
+                order_book = np.tile(np.array([[1, 0]]), (self.orderbook_n, 1))
+                order_book[0][1] = self.big_m  # infinity amount for inter exchange transfer
+                self.order_book[i]['orders'] = order_book
 
     def have_workable_solution(self):
         '''return whether the model has workable solution'''

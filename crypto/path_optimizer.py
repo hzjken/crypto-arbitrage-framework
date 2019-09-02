@@ -1,7 +1,7 @@
 from docplex.mp.model import Model
 import numpy as np
 from itertools import combinations
-from .info import fiat, trading_fee
+from .info import fiat, trading_fee, tokens
 from .utils import get_withdrawal_fees, get_crypto_prices, multiThread
 import re
 from copy import deepcopy
@@ -33,6 +33,7 @@ class PathOptimizer(Model):
     include_fiat = None  # boolean variable, to decide whether the arbitrage path should include fiat currencies.
     inter_exchange_trading = None  # boolean variable to determine whether considers inter exchange trading
     fiat_set = None  # a set of fiat currencies, that need to be excluded if include_fiat is set to False
+    token_set = None # a set of crypto currencies to considered, tokens not in this set will be removed
     run_times = 0  # an inner counter to see how many times the find_arbitrage function has been run, starts from 0
     refresh_time = None  # the number of times that find_arbitrage function to be run to refresh withdrawal and commission
     var_location = None  # an array that records the location of all the decision variables
@@ -121,6 +122,7 @@ class PathOptimizer(Model):
         self.include_fiat = False
         self.trading_fee = trading_fee
         self.fiat_set = fiat
+        self.token_set = tokens
         self.inter_exchange_trading = True
         self.consider_init_bal = True
         self.consider_inter_exc_bal = True
@@ -149,6 +151,7 @@ class PathOptimizer(Model):
 
         # currency_set should only contain coins that have reference usd price, other wise volume too small and volatile
         coin_set = set([i.split('_')[-1] for i in self.currency_set])
+        coin_set = coin_set & (self.token_set | self.fiat_set)
         self.crypto_prices = get_crypto_prices(coin_set)
         self.currency_set = set([i for i in self.currency_set if i.split('_')[-1] in self.crypto_prices.keys()])
 

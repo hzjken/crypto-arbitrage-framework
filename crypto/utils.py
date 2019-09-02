@@ -41,7 +41,7 @@ def get_withdrawal_fees(exchange, trading_size=1000):
 
 def get_crypto_prices(coin_set, convert='USD'):
     '''fetch crypto currencies price from coin market cap api'''
-    coin_set = set([i for i in coin_set if i.isalnum()])
+    coin_set = set([i for i in coin_set if i.isalpha()])
     output = {}
     url = 'https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest'
     parameters = {

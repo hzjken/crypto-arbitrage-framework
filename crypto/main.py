@@ -12,20 +12,20 @@ if __name__ == '__main__':
         'kucoin': {'BTC': 10, 'ETH': 200, 'NEO': 1000, 'XRP': 30000, 'XLM': 80000},
         'binance': {'BTC': 10, 'ETH': 200, 'NEO': 1000, 'XRP': 30000, 'XLM': 80000},
         'bittrex': {'BTC': 10, 'ETH': 200, 'NEO': 1000, 'XRP': 30000, 'XLM': 80000},
-
     }
     
     # inititate the path_optimizer with extra parameters
     path_optimizer = PathOptimizer(
         exchanges,
-        path_length=10, # to allow arbitrage path of max length 10
+        path_length=6, # to allow arbitrage path of max length 10
         simulated_bal=simulated_bal, # check opportunities with simulated balance
         interex_trading_size=2000, # approximate the inter exchange trading size to be 2000 USD
-        min_trading_limit=100 # minimum trading limit is 100 USD
+        inter_exchange_trading=True,
+        min_trading_limit=10 # minimum trading limit is 10 USD
     )
     path_optimizer.init_currency_info()
     # inititate the amt_optimizer, considers top 100 orders from the order book when doing amount optimization.
-    amt_optimizer = AmtOptimizer(path_optimizer, orderbook_n=100)
+    amt_optimizer = AmtOptimizer(path_optimizer, orderbook_n=20)
     # inititate the trade executor
     trade_executor = TradeExecutor(path_optimizer)
 
